@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">Sejong2WasherTimer</string>
+    <string name="washer1">1번 세탁기</string>
+    <string name="washer2">2번 세탁기</string>
+    <string name="washer3">3번 세탁기</string>
+    <string name="washer4">4번 세탁기</string>
+    <string name="washer5">5번 세탁기</string>
+    <string name="washer6">6번 세탁기</string>
+    <string name="washer7">7번 세탁기</string>
+    <string name="dryer1">1번 건조기</string>
+    <string name="dryer2">1번 건조기</string>
+    <string name="dryer3">1번 건조기</string>
+
+
+</resources>
