@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "956939373251",
+    "project_id": "sejong2washertimer",
+    "storage_bucket": "sejong2washertimer.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:956939373251:android:1cb826e2a0650ef595b076",
+        "android_client_info": {
+          "package_name": "com.example.sejong2washertimer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTjemeQzEDZGTTULtpunQL42tIMQhyN18"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
