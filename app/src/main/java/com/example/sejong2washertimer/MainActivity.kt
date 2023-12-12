@@ -63,22 +63,19 @@ import com.example.sejong2washertimer.ui.TimerScreen
 import com.example.sejong2washertimer.ui.WasherApp
 import com.example.sejong2washertimer.ui.WasherList
 import com.example.sejong2washertimer.ui.theme.Sejong2WasherTimerTheme
+import com.google.firebase.Firebase
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.database
 import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
 
 class MainActivity : ComponentActivity() {
-    private lateinit var databaseReference : DatabaseReference
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val firebaseDatabase: FirebaseDatabase = FirebaseDatabase.getInstance()
-        databaseReference = firebaseDatabase.getReference("timer")
-
-        print(databaseReference)
         setContent {
             Sejong2WasherTimerTheme {
                 // A surface container using the 'background' color from the theme
@@ -105,6 +102,5 @@ class MainActivity : ComponentActivity() {
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
-    Sejong2WasherTimerTheme {
-    }
+    WasherApp()
 }
