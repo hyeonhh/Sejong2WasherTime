@@ -86,6 +86,7 @@ fun Timer(
 
 
 
+
     val database = Firebase.database
     val myRef = database.getReference("washer1_startTime")
 
@@ -93,7 +94,6 @@ fun Timer(
         override fun onDataChange(snapshot: DataSnapshot) {
             val washer1_startTime = snapshot.getValue(String::class.java)
             if(washer1_startTime!= null)    {
-                Log.d("파베",washer1_startTime)
                 val startDate = SimpleDateFormat("HH:mm").parse(washer1_startTime)
                 val updateDate = Calendar.getInstance().apply {
                     time=startDate
@@ -101,7 +101,7 @@ fun Timer(
                 }.time
 
                 updatedTime = SimpleDateFormat("HH:mm").format(updateDate)
-                Log.d("끝나는 시간", "Updated time: $updatedTime")
+
 
 
             }
@@ -117,12 +117,7 @@ fun Timer(
 
     fun saveCurrentTimeDatabase() {
         val startedTime = System.currentTimeMillis()
-        Log.d("현재시간", startedTime.toString())
         val formattedTime = SimpleDateFormat("HH:mm").format(startedTime)
-        Log.d(
-            "clickBUtton",
-            formattedTime
-        )
         myRef.setValue( formattedTime)
 
     }
@@ -259,12 +254,14 @@ fun TimerScreen(
         horizontalAlignment = Alignment.CenterHorizontally
 
     ) {
-        Text(
-            text = stringResource(id = R.string.washer1),
-            //todo : 클릭한 세탁기 string으로 연결해주기
-            textAlign= TextAlign.Center
 
-        )
+            Text(
+                text = "1번 세탁기",
+                //todo : 클릭한 세탁기 string으로 연결해주기
+                textAlign= TextAlign.Center
+
+            )
+
         Spacer(
             modifier = Modifier
                 .size(50.dp)
