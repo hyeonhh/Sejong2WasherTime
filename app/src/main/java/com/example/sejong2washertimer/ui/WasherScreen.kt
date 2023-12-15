@@ -1,8 +1,12 @@
 package com.example.sejong2washertimer.ui
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.icu.text.SimpleDateFormat
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
@@ -19,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -44,8 +50,10 @@ import com.example.sejong2washertimer.model.Washer
 import com.google.firebase.Firebase
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
+import kotlinx.coroutines.time.delay
 import java.util.Calendar
 import java.util.Date
 
@@ -65,12 +73,12 @@ fun WasherApp(
         startDestination = RoutingScreen.Washer.name,
     ){
         composable(RoutingScreen.Washer.name) {
-            WasherList(washerList = Datasource().washers, navController= navController)
+            WasherList(washerList = Datasource().washers)
         }
 
         composable(RoutingScreen.Timer.name) {
             TimerScreen()
-            }
+        }
 
 
         composable(RoutingScreen.Dryer.name){
@@ -80,37 +88,9 @@ fun WasherApp(
 
 }
 
-@Composable
-fun StartWasherAlertDialog() {
-    AlertDialog(
-        onDismissRequest = { /*TODO*/ },
-        confirmButton = {
-
-            TextButton(onClick = {}) {
-                Text(text = "세탁 시작하기")
-
-            }
-
-        },
-        dismissButton = {
-            TextButton(onClick ={} ) {
-                Text(text = "세탁 취소하기")
-
-            }
-        }
-    )
-
-
-}
-
-
-
-
-
 
 @Composable
 fun WasherList(
-    navController: NavController,
     washerList: List<Washer>,
     modifier: Modifier = Modifier
 ) {
@@ -123,42 +103,72 @@ fun WasherList(
             modifier= Modifier
 
                 .padding(8.dp)
-                .clickable {
-                    if (washer.isAvailable) {
-                    //                        navController.navigate("${RoutingScreen.Timer.name}")
 
-                    }
-                }
         )
         }
     }
 }
+
+@Composable
+fun createWasherReference(washerId: String?): DatabaseReference {
+    val database = Firebase.database
+    if (washerId != null) {
+        Log.d("아이디","washer${washerId}")
+    }
+    return database.getReference("washer${washerId}startTime")
+}
+
+
+
 @Composable
 fun WasherCard(
     washer: Washer,
     modifier: Modifier = Modifier
 ) {
-    var remainingTime by remember { mutableStateOf(0L) }
-
+    val context = LocalContext.current
     var updatedTime by remember { mutableStateOf("") }
+    var isFirebaseDataAvailable by remember { mutableStateOf(false) }
+    var showToast by remember {
+        mutableStateOf(false)
+    }
 
-    val database = Firebase.database
-    val myRef = database.getReference("washer1_startTime")
+    val myRef = createWasherReference(washer.washerId)
+
+
+    fun isCurrentTimeEqualsCompletionTime(completionTime:String):Boolean{
+        try {
+            val currentTime = SimpleDateFormat("HH:mm").format(Calendar.getInstance().time)
+
+            return currentTime==completionTime
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return false
+        }
+
+    }
+
+
+    @Composable
+    fun showToast() {
+        val context = LocalContext.current
+        Toast.makeText(context,"세탁 완료",Toast.LENGTH_SHORT).show()
+    }
+
 
 
     myRef.addValueEventListener(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
-            val washer1_startTime = snapshot.getValue(String::class.java)
-            if(washer1_startTime!= null)    {
-                val startDate = SimpleDateFormat("HH:mm").parse(washer1_startTime)
+            val washerStartTime = snapshot.getValue(String::class.java)
+            if(washerStartTime!= null)    {
+                val startDate = SimpleDateFormat("HH:mm").parse(washerStartTime)
                 val updateDate = Calendar.getInstance().apply {
                     time=startDate
-                    add(Calendar.MINUTE,45)
+                    add(Calendar.MINUTE,5)
                 }.time
 
+                Log.d("완료 시간", updateDate.toString())
+
                 updatedTime = SimpleDateFormat("HH:mm").format(updateDate)
-
-
 
 
             }
@@ -169,6 +179,28 @@ fun WasherCard(
         }
 
     })
+
+
+
+    LaunchedEffect(updatedTime){
+        while(true) {
+            if(isCurrentTimeEqualsCompletionTime(updatedTime)){
+                Log.d("시간이 맞아", "${washer.washerId}번의 세탁기 완료됨")
+                showToast = true
+                isFirebaseDataAvailable=true
+                break
+            }
+            Log.d("안맞아","시간이 안맞아")
+            kotlinx.coroutines.delay(1000*60)
+
+        }
+    }
+    if(showToast) {
+        Handler(Looper.getMainLooper()).postDelayed({
+            showToast=false
+        },500)
+        showToast()
+    }
 
 
     Card(
@@ -192,7 +224,7 @@ fun WasherCard(
             Spacer(modifier = Modifier.size(50.dp))
 
 
-            if (washer.isAvailable) {
+            if (!isFirebaseDataAvailable) {
                 WasherCardClickableContent(washer=washer,updatedTime=updatedTime)
                 Text(
                     text = "사용 가능",
@@ -200,7 +232,7 @@ fun WasherCard(
                     style = TextStyle(
                         fontSize = 13.sp,
                         color = Color.Blue
-                        )
+                    )
 
                 )
                 Spacer(modifier = Modifier.size(10.dp))
@@ -216,8 +248,8 @@ fun WasherCard(
                 Text(text = "완료 시간 : ${updatedTime}",
                     style = TextStyle(fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
-                        )
                     )
+                )
             }
 
 
@@ -236,13 +268,10 @@ fun WasherCardClickableContent(washer: Washer, updatedTime: String) {
     // Washer가 사용 가능한 상태일 때 클릭하면 AlertDialog 띄우기
     val showDialog = remember { mutableStateOf(false) }
 
-    val database = Firebase.database
-
-    //todo : 각 item에 맞는 파이어베이스 경로를 설정해줘야한다.
-    val myRef = database.getReference("washer${washer.washerId}_startTime")
-
+    val myRef = createWasherReference(washer.washerId)
 
     fun saveCurrentTimeDatabase() {
+
         val startedTime = System.currentTimeMillis()
         val formattedTime = SimpleDateFormat("HH:mm").format(startedTime)
         myRef.setValue( formattedTime)
@@ -270,22 +299,31 @@ fun WasherCardClickableContent(washer: Washer, updatedTime: String) {
 
     // Washer가 사용 가능한 상태일 때 클릭하면 AlertDialog 호출
     Spacer(modifier = Modifier.size(10.dp))
-    Image(
-        painter = painterResource(id = R.drawable.playicon),
-        contentDescription = null,
-        modifier = Modifier
-            .size(50.dp)
-            .clickable {
-                showDialog.value = true
-            }
-    )
 
-    Spacer(modifier = Modifier.size(10.dp))
+    if(washer.isAvailable) {
+        Image(
+            painter = painterResource(id = R.drawable.playicon),
+            contentDescription = null,
+            modifier = Modifier
+                .size(50.dp)
+                .clickable {
+                    showDialog.value = true
+                }
+        )
 
-    Text(
-        text = "사용 가능",
-        style = TextStyle(fontSize = 13.sp, color = Color.Blue)
-    )
+        Spacer(modifier = Modifier.size(10.dp))
+
+        Text(
+            text = "사용 가능",
+            style = TextStyle(fontSize = 13.sp, color = Color.Blue)
+        )
+    }
+    else{
+        Text(
+            text = "완료 시간 : $updatedTime",
+            style = TextStyle(fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        )
+    }
 }
 
 @Composable
@@ -297,13 +335,13 @@ fun StartWasherAlertDialog(
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-                Text(text = dialogTitle)
+            Text(text = dialogTitle)
         },
         text = {
             Text(text = dialogText)
         },
         confirmButton = {
-            TextButton(onClick = onConfirm) {
+            TextButton(onClick =onConfirm) {
                 Text(text = "세탁 시작하기")
             }
         },
