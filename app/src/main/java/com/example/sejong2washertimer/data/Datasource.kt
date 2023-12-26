@@ -6,7 +6,7 @@ import com.example.sejong2washertimer.model.Washer
 
 class Datasource() {
     val washers = listOf(
-        Washer("1",R.drawable.washing_machine,R.string.washer1,false),
+        Washer("1",R.drawable.washing_machine,R.string.washer1,true),
         Washer("2",R.drawable.washing_machine,R.string.washer2,true),
         Washer("3",R.drawable.washing_machine,R.string.washer3,true),
         Washer("4",R.drawable.washing_machine,R.string.washer4,true),

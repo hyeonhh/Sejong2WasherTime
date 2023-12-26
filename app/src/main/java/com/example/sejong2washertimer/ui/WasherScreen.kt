@@ -102,7 +102,7 @@ fun WasherList(
             washer = washer,
             modifier= Modifier
 
-                .padding(8.dp)
+                .padding(10.dp)
 
         )
         }
@@ -112,9 +112,6 @@ fun WasherList(
 @Composable
 fun createWasherReference(washerId: String?): DatabaseReference {
     val database = Firebase.database
-    if (washerId != null) {
-        Log.d("아이디","washer${washerId}")
-    }
     return database.getReference("washer${washerId}startTime")
 }
 
@@ -125,12 +122,12 @@ fun WasherCard(
     washer: Washer,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     var updatedTime by remember { mutableStateOf("") }
     var isFirebaseDataAvailable by remember { mutableStateOf(false) }
     var showToast by remember {
         mutableStateOf(false)
     }
+    var refreshUI by remember { mutableStateOf(false) } // 추가
 
     val myRef = createWasherReference(washer.washerId)
 
@@ -138,7 +135,6 @@ fun WasherCard(
     fun isCurrentTimeEqualsCompletionTime(completionTime:String):Boolean{
         try {
             val currentTime = SimpleDateFormat("HH:mm").format(Calendar.getInstance().time)
-
             return currentTime==completionTime
         } catch (e: Exception) {
             e.printStackTrace()
@@ -151,25 +147,29 @@ fun WasherCard(
     @Composable
     fun showToast() {
         val context = LocalContext.current
-        Toast.makeText(context,"세탁 완료",Toast.LENGTH_SHORT).show()
+        Toast.makeText(context,"\uD83D\uDE0A ${washer.washerId}번 세탁이 완료되었어요!",Toast.LENGTH_SHORT).show()
     }
+
 
 
 
     myRef.addValueEventListener(object : ValueEventListener {
         override fun onDataChange(snapshot: DataSnapshot) {
             val washerStartTime = snapshot.getValue(String::class.java)
+
             if(washerStartTime!= null)    {
                 val startDate = SimpleDateFormat("HH:mm").parse(washerStartTime)
                 val updateDate = Calendar.getInstance().apply {
                     time=startDate
-                    add(Calendar.MINUTE,5)
+                    add(Calendar.MINUTE,1)
                 }.time
-
-                Log.d("완료 시간", updateDate.toString())
 
                 updatedTime = SimpleDateFormat("HH:mm").format(updateDate)
 
+
+                if(isCurrentTimeEqualsCompletionTime(updatedTime)){
+                    washer.isAvailable=true
+                }
 
             }
         }
@@ -181,20 +181,25 @@ fun WasherCard(
     })
 
 
+    fun resetFirebaseData(myRef:DatabaseReference) {
+        myRef.child("washer${washer.washerId}startTime").setValue(null)
+        Log.d("초기화","데이터베이스 초기화")
+    }
+
 
     LaunchedEffect(updatedTime){
         while(true) {
             if(isCurrentTimeEqualsCompletionTime(updatedTime)){
-                Log.d("시간이 맞아", "${washer.washerId}번의 세탁기 완료됨")
                 showToast = true
-                isFirebaseDataAvailable=true
+               washer.isAvailable=true
+
                 break
             }
-            Log.d("안맞아","시간이 안맞아")
             kotlinx.coroutines.delay(1000*60)
 
         }
     }
+
     if(showToast) {
         Handler(Looper.getMainLooper()).postDelayed({
             showToast=false
@@ -205,7 +210,6 @@ fun WasherCard(
 
     Card(
         modifier = modifier
-
     ) {
 
         Row(
@@ -221,34 +225,21 @@ fun WasherCard(
             Text(
                 text = stringResource(id = washer.washerStringResourceId),
             )
-            Spacer(modifier = Modifier.size(50.dp))
+            Spacer(modifier = Modifier.size(30.dp))
 
 
-            if (!isFirebaseDataAvailable) {
-                WasherCardClickableContent(washer=washer,updatedTime=updatedTime)
-                Text(
-                    text = "사용 가능",
-
-                    style = TextStyle(
-                        fontSize = 13.sp,
-                        color = Color.Blue
-                    )
-
-                )
-                Spacer(modifier = Modifier.size(10.dp))
-
-                Image(
-                    painter = painterResource(id = R.drawable.playicon),
-                    contentDescription =null
-                )
-
-
+            if (washer.isAvailable) {
+                WasherCardClickableContent(washer = washer, updatedTime = updatedTime)
+//                {
+//                    isFirebaseDataAvailable=it
+//                }
             }
             else{
                 Text(text = "완료 시간 : ${updatedTime}",
                     style = TextStyle(fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
+
                 )
             }
 
@@ -264,17 +255,23 @@ fun WasherCard(
 
 
 @Composable
-fun WasherCardClickableContent(washer: Washer, updatedTime: String) {
-    // Washer가 사용 가능한 상태일 때 클릭하면 AlertDialog 띄우기
+fun WasherCardClickableContent(
+    washer: Washer,
+    updatedTime: String,
+//    setIsFirebaseDataAvailable: (Boolean) -> Unit
+) {
     val showDialog = remember { mutableStateOf(false) }
 
     val myRef = createWasherReference(washer.washerId)
 
-    fun saveCurrentTimeDatabase() {
+    fun saveCurrentTimeDatabase(washerId: String?) {
 
+        val database = Firebase.database
+        val ref = database.getReference("washer${washerId}startTime")
         val startedTime = System.currentTimeMillis()
         val formattedTime = SimpleDateFormat("HH:mm").format(startedTime)
-        myRef.setValue( formattedTime)
+        Log.d("현재 ","저장합니다.")
+        ref.setValue( formattedTime)
 
     }
     if (showDialog.value) {
@@ -284,14 +281,17 @@ fun WasherCardClickableContent(washer: Washer, updatedTime: String) {
             dialogText =" 50분동안 세탁이 진행되어요! 세탁을 시작할까요?" ,
             onConfirm = {
                 // TODO: 세탁 시작 시 필요한 작업 수행
-                saveCurrentTimeDatabase()
+                saveCurrentTimeDatabase(washerId = washer.washerId)
                 washer.isAvailable=false
                 showDialog.value = false
+//                setIsFirebaseDataAvailable(true)
+
 
             },
             onDismiss = {
                 // TODO: 세탁 취소 시 필요한 작업 수행
                 showDialog.value = false
+//                setIsFirebaseDataAvailable(false)
 
             }
         )
@@ -308,6 +308,7 @@ fun WasherCardClickableContent(washer: Washer, updatedTime: String) {
                 .size(50.dp)
                 .clickable {
                     showDialog.value = true
+
                 }
         )
 

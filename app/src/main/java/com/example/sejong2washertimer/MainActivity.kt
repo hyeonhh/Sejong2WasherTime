@@ -63,6 +63,7 @@ import com.example.sejong2washertimer.ui.TimerScreen
 import com.example.sejong2washertimer.ui.WasherApp
 import com.example.sejong2washertimer.ui.WasherList
 import com.example.sejong2washertimer.ui.theme.Sejong2WasherTimerTheme
+import com.google.firebase.FirebaseApp
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import kotlinx.coroutines.delay
@@ -74,7 +75,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var databaseReference : DatabaseReference
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        FirebaseApp.initializeApp(applicationContext)
         val firebaseDatabase: FirebaseDatabase = FirebaseDatabase.getInstance()
         databaseReference = firebaseDatabase.getReference("timer")
 
