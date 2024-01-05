@@ -35,6 +35,7 @@ class FirebaseCloudMessagingService :FirebaseMessagingService() {
         val title= message.data["title"].toString()
         val body = message.data["content"].toString()
 
+        Log.d("Cloud",message.data.toString())
 
 
         createNotificationChannel(channelId)

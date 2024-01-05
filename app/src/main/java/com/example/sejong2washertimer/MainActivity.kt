@@ -69,6 +69,7 @@ class MainActivity : ComponentActivity() {
 
                     Box(contentAlignment = Alignment.Center) {
                         WasherApp()
+
                     }
                 }
 

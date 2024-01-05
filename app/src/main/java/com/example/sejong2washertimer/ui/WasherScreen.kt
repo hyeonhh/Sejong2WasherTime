@@ -192,16 +192,19 @@ fun WasherCard(
             showToast=false
         },500)
 
-        Log.d("FCM1","여기까지는 OK")
-        val notiModel = NotiModel("세탁완료알림!","세탁이 다 되었어요! ")
-        Log.d("FCM2","여기까지는 OK")
-        val pushModel = PushNotification(notiModel, token = "to")
 
         //todo : token 저장 후 해당 token 넣어주는 로직 구현 필요!
 
         LaunchedEffect(Unit){
-            testPush(pushModel)
-            Log.d("FCM3","여기까지는 OK")
+            try {
+                val notiModel = NotiModel("${washer.washerId}번 세탁이 완료되었어요!","\uD83D\uDE0A 세탁물을 찾으러와주세요 ")
+                // TODO: 토큰 저장 후 해당 토큰을 넣어주는 로직 추가 필요
+                val pushModel = PushNotification(notiModel)
+                testPush(pushModel)
+            } catch (e: Exception) {
+                e.printStackTrace()
+                Log.e("FCM", "FCM 전송 중 예외 발생: ${e.message}")
+            }
         }
 
 
@@ -355,94 +358,22 @@ fun StartWasherAlertDialog(
 }
 
 
-//@Composable
-//fun NotificationFCM() {
-//    val context = LocalContext.current
-//    val channelId = "washerChannel"
-//    val notificationId= 0
-//
-//
-//    LaunchedEffect(Unit){
-//        createNotificationChannel(channelId,context)
-//    }
-//
-//    val notiModel = NotiModel("세탁완료알림!","세탁이 다 되었어요! ")
-//    val pushModel = PushNotification(notiModel,"edd6OyJlQrilexZ3Bv4X50:APA91bHZjWHqKL4vQfst9d1FsmNsmx6EajYFzI8hTujr556uPf0tZzBsN7Jk9whOyGxBZ_lkhX7SmWQvVIZKiL-yWMW_hze0V9yDWHC2rH7DS5Pb0zs4PAraCDXBOQbtEdgAkcuT_z3o")
-//    //todo : token 저장 후 해당 token 넣어주는 로직 구현 필요!
-//
-//
-//    Button(onClick = { testPush(pushModel) })
-//
-//}
 
 
-fun createNotificationChannel(channelId:String, context: Context) {
-    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
-        val name = "washerChannel"
-        val descriptionText = "세탁이 완료되었어요"
-        val importance = NotificationManager.IMPORTANCE_DEFAULT
-        val channel = NotificationChannel(channelId,name,importance).apply {
-            description=descriptionText
-        }
 
-        val notificationManager:NotificationManager=context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.createNotificationChannel(channel)
-    }
-
-
-}
-
-fun showSimpleNotification(
-    context:Context,
-    channelId:String,
-    notificationId: Int,
-    textTitle:String,
-    textContent:String,
-    priority:Int = NotificationCompat.PRIORITY_DEFAULT
-) {
-
-    val builder = NotificationCompat.Builder(context,channelId)
-        .setSmallIcon(R.drawable.washing_machine)
-        .setContentTitle(textTitle)
-        .setContentText(textContent)
-        .setPriority(priority)
-
-    with(NotificationManagerCompat.from(context)) {
-        if (ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.POST_NOTIFICATIONS
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return
-        }
-        notify(notificationId,builder.build())
-    }
-
-}
 
 //Push
-private suspend fun testPush(notification:PushNotification)= CoroutineScope(Dispatchers.IO).launch {
+private fun testPush(notification:PushNotification)= CoroutineScope(Dispatchers.IO).launch {
 
     try {
         val response = RetrofitInstance.api.postNotification(notification)
         if(response.isSuccessful) {
             Log.d("testPush성공","레트로핏")
 
-
         }
         else {
-
             Log.e("실패","${response.errorBody()?.string()}")
             Log.e("실패","${response.code()}")
-            Log.e("실패","${response.code()}")
-
             Log.e("실패","${response.headers()}")
 
 
