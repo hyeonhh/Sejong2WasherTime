@@ -200,7 +200,7 @@ fun WasherCard(
                 val notiModel = NotiModel("${washer.washerId}번 세탁이 완료되었어요!","\uD83D\uDE0A 세탁물을 찾으러와주세요 ")
                 // TODO: 토큰 저장 후 해당 토큰을 넣어주는 로직 추가 필요
                 val pushModel = PushNotification(notiModel)
-                testPush(pushModel)
+                pushWasherCompleted(pushModel)
             } catch (e: Exception) {
                 e.printStackTrace()
                 Log.e("FCM", "FCM 전송 중 예외 발생: ${e.message}")
@@ -363,12 +363,12 @@ fun StartWasherAlertDialog(
 
 
 //Push
-private fun testPush(notification:PushNotification)= CoroutineScope(Dispatchers.IO).launch {
+private fun pushWasherCompleted(notification:PushNotification)= CoroutineScope(Dispatchers.IO).launch {
 
     try {
         val response = RetrofitInstance.api.postNotification(notification)
         if(response.isSuccessful) {
-            Log.d("testPush성공","레트로핏")
+            Log.d("testPush성공",response.body().toString())
 
         }
         else {

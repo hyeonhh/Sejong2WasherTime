@@ -21,6 +21,7 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.messaging.Constants.MessageNotificationKeys.TAG
+import com.google.firebase.messaging.FirebaseMessaging
 import com.google.firebase.messaging.messaging
 
 class MainActivity : ComponentActivity() {
@@ -36,9 +37,9 @@ class MainActivity : ComponentActivity() {
 
 
 
-        //todo : 추후 회원가입 화면에서 token
-            // [START log_reg_token]
-            Firebase.messaging.getToken().addOnCompleteListener { task ->
+        //todo : 추후 스플래시 화면에서 token 받도록 로직 이동 필요
+
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
                 if (!task.isSuccessful) {
                     Log.w(TAG, "Fetching FCM registration token failed", task.exception)
                     return@addOnCompleteListener
@@ -47,14 +48,9 @@ class MainActivity : ComponentActivity() {
                 // Get new FCM registration token
                 val token = task.result
 
-                // Log and toast
-                val msg = "$token"
+                // Log
                 Log.d("token보기", token)
-                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-
-                print(token)
-            }
-            // [END log_reg_token]
+         }
 
 
 

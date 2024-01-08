@@ -21,14 +21,18 @@ class FirebaseCloudMessagingService :FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
+        Log.e("CloudMessage", "Notification ${message.notification}")
 
 
+        // firebase 콘솔에서 보내오는 메시지를 확인하기 위한 코드
         if (message.notification != null) {
             Log.e("CloudMessage", "Notification ${message.notification}")
             Log.e("CloudMessage", "Notification Title  ${message.notification!!.title}")
             Log.e("CloudMessage", "Notification Body ${message.notification!!.body}")
 
         }
+
+        // 지정한 형태의 데이터 메시지를 위한 코드
         val channelId = "washerChannel"
         val notificationId= 0
 
@@ -46,7 +50,7 @@ class FirebaseCloudMessagingService :FirebaseMessagingService() {
 
 
 
-    fun createNotificationChannel(channelId:String) {
+    private fun createNotificationChannel(channelId:String) {
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
             val name = "washerChannel"
             val descriptionText = "세탁이 완료되었어요"
@@ -70,7 +74,6 @@ class FirebaseCloudMessagingService :FirebaseMessagingService() {
         body:String,
         priority:Int = NotificationCompat.PRIORITY_DEFAULT
     ) {
-
 
         var builder = NotificationCompat.Builder(this,channelId)
             .setSmallIcon(R.drawable.washing_machine)

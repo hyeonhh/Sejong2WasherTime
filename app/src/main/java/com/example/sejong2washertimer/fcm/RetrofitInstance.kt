@@ -12,7 +12,6 @@ import javax.net.ssl.X509TrustManager
 class RetrofitInstance {
 
     companion object {
-
         private val retrofit by lazy {
 
             Retrofit.Builder()
