@@ -52,13 +52,15 @@ android {
 }
 
 dependencies {
-    implementation("com.google.firebase:firebase-messaging-ktx")
-
     implementation(platform("com.google.firebase:firebase-bom:32.6.0"))
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-database-ktx")
     implementation("com.google.firebase:firebase-database:20.3.0")
-
+    implementation("com.google.firebase:firebase-messaging-ktx")
+    implementation ("com.google.firebase:firebase-messaging:23.4.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.30.1")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("com.google.firebase:firebase-crashlytics-buildtools:2.9.9")
 
     val nav_version = "2.5.3"
     implementation("androidx.navigation:navigation-compose:$nav_version")
@@ -77,4 +79,15 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.2.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.3.9")
+    implementation ("com.squareup.okhttp3:logging-interceptor:3.12.1")
+
+
+
+
+
 }
+
